@@ -1,0 +1,2 @@
+# smartCli
+API cli application
