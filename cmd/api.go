@@ -15,7 +15,7 @@ var apiCmd = &cobra.Command{
 Generate Api Keys 
 Configure Api Keys `,
 	// Run: func(cmd *cobra.Command, args []string) {
-	// 	fmt.Println("api called")
+	// 	// fmt.Println("api called")
 	// },
 }
 
@@ -31,4 +31,5 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// apiCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
 }

@@ -4,7 +4,11 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -16,7 +20,8 @@ var rootCmd = &cobra.Command{
 	Long: `smartCli allows you to interact with the api and execute
 	functions that allow you to generate and configure api keys, login, logout, select projects
 	simulate and build projects and persform several other operations with the backend`,
-	Version: "0.1",
+	Version:          "0.1",
+	PersistentPreRun: authenticateUser,
 
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
@@ -46,4 +51,64 @@ func init() {
 	versionTemplate := `{{printf "%s: %s - version %s\n" .Name .Short .Version}}`
 
 	rootCmd.SetVersionTemplate((versionTemplate))
+}
+
+type CredentialStruct struct {
+	AccessKey    string
+	AccessSecret string
+}
+
+func authenticateUser(cmd *cobra.Command, args []string) {
+
+	//Exempting Login command from this prerun function
+	if cmd.Name() == "login" {
+		return
+	}
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	authFilepath := filepath.Join(homeDir, ".smartCli", ".config.json")
+	// fmt.Println(authFilepath)
+	_, err = os.Stat(authFilepath)
+
+	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Println("You have to login my boy!")
+			os.Exit(1)
+		}
+
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	file, err := os.ReadFile(authFilepath)
+
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			fmt.Println("You have to login my boy!")
+			os.Exit(1)
+		}
+	}
+
+	if len(file) == 0 {
+		fmt.Println("You have to login my boy!")
+		os.Exit(1)
+	}
+
+	credentials := &CredentialStruct{}
+	if err = json.Unmarshal(file, credentials); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	accessKeyExists := credentials.AccessKey
+	accessSecretExists := credentials.AccessSecret
+	if accessKeyExists == "" || accessSecretExists == "" {
+		fmt.Println("You have to login my boy!")
+		os.Exit(1)
+	}
 }
